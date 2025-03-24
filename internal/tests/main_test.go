@@ -17,12 +17,17 @@ func TestMain(m *testing.M) {
 		log.Fatal("Error loading .env:", err)
 	}
 	testMode := os.Getenv("TEST_MODE")
+	apiEnv := os.Getenv("API_ENV")
+
+	if apiEnv != "testing" {
+		panic("env var API_ENV must be set to testing")
+	}
 
 	code := m.Run()
 	if testMode == "integration" {
-		print("Integration tests have finished")
+		println("Integration tests have finished")
 	} else {
-		print("Mocking tests have finished")
+		println("Mocking tests have finished")
 	}
 	os.Exit(code)
 

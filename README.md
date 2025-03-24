@@ -75,7 +75,7 @@ The application uses Docker and PostgreSQL for database management, and integrat
 2. **Start the server**
     ```bash
     go run ./cmd
-    # Set env variable API_ENV=development to turn Gin logs on and use the Database
+    # Set env variable API_ENV=development to turn Gin logs on and use the Database (docker required)
     # Set env variable API_ENV=testing to turn Gin logs off and use local memory
     ```
 ---
@@ -83,8 +83,9 @@ The application uses Docker and PostgreSQL for database management, and integrat
 -   ```bash
     cd internal/tests
     go test
-    # Set env variable TEST_MODE=integration for integration tests.
-    # Set env variable API_ENV=testing to turn Gin logs off.
+    # Set env variable TEST_MODE=integration for integration tests (docker required)
+    # Set env variable TEST_MODE=mock to use local memory
+    # Env variable API_ENV must be in "testing" to test the project. Otherwise, it wont run
     ```
 ---
 ## 📚 API Documentation
