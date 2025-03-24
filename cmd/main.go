@@ -32,6 +32,7 @@ func main() {
 		log.Fatal("Invalid API_ENV")
 	}
 
+	log.Printf("Server running in %v mode\n", api_env)
 	sv := api.NewServer(db)
 	log.Fatal(sv.Start())
 }
