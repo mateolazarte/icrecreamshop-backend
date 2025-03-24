@@ -1,0 +1,834 @@
+openapi: 3.0.0
+info:
+  description: |
+    API for an Ice Cream Shop. Through this API, 
+    you can query ice cream flavors, place and pay for orders.
+    There are endpoints for users and admins.
+  version: "1.0.0"
+  title: Ice Cream Shop
+paths:
+  /flavors:
+    get:
+      description: Lists ice cream flavors
+      parameters:
+        - in: query
+          name: type
+          required: false
+          schema:
+            $ref: '#/components/schemas/FlavorType'
+      responses:
+        '200':
+          description: These are the ice cream flavors.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Flavor'
+    post:
+      description: Add a new ice cream flavor (only admins)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Flavor'
+      responses:
+        '201':
+          description: The new ice cream flavor has been created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Flavor'
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+        '403':
+          description: Admin privileges required
+  /flavors/{flavorID}:
+    get:
+      description: See a particular flavor
+      parameters:
+        - $ref: '#/components/parameters/flavorId'
+      responses:
+        '200':
+          description: The selected flavor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Flavor'
+        '404':
+          description: No flavor found with this ID
+
+  /signup:
+    post:
+      description: Sign up a new user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '201':
+          description: The new user has been signed up
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Could not sign up the user. Bad request
+  /login:
+    post:
+      description: Log in an user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: User logged in
+        '400':
+          description: Invalid credentials
+  /users:
+    get:
+      description: Obtains all users (only admins)
+      responses:
+        '200':
+          description: These are the users.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '403':
+          description: Unauthorized
+  /users/{userId}:
+    get:
+      description: See a particular user (only admins)
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      responses:
+        '200':
+          description: The selected user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid input
+        '403':
+          description: Unauthorized
+        '404':
+          description: No user found with this ID
+
+    delete:
+      description: Delete an user (only admins)
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      responses:
+        '204':
+          description: The user has been deleted
+        '400':
+          description: Invalid input
+        '403':
+          description: Unauthorized
+        '404':
+          description: No user found with this ID
+  /users/{userId}/admin:
+    put:
+      description: Promote an user to admin (only admins)
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      responses:
+        '200':
+          description: The user has been promoted to admin
+        '400':
+          description: Invalid input
+        '403':
+          description: Unauthorized
+        '404':
+          description: No user found with this ID
+
+  /my-account:
+    get:
+      description: Get current user account details
+      responses:
+        '200':
+          description: Account details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: An user must be logged in
+
+    delete:
+      description: Delete current user account
+      responses:
+        '204':
+          description: Account deleted
+        '401':
+          description: An user must be logged in
+
+    put:
+      description: Update current user account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: Account updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid input
+        '401':
+          description: An user must be logged in
+  /my-account/delivery-driver:
+    delete:
+      description: Makes the current user no longer a delivery driver and deletes data
+      responses:
+        '204':
+          description: User is no longer a delivery driver
+        '401':
+          description: A delivery driver must be logged in
+
+    put:
+      description: Update current delivery driver account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryDriver'
+      responses:
+        '200':
+          description: Delivery driver data updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryDriver'
+        '400':
+          description: Invalid input
+        '401':
+          description: A delivery driver must be logged in
+
+  /my-orders:
+    get:
+      description: Obtain all orders from current user
+      responses:
+        '200':
+          description: These are all the orders made by the current user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+        '401':
+          description: An user must be logged in
+    post:
+      description: Make a new order for the current user to the inputted address
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                address:
+                  type: string
+                  description: address to which the order will be delivered
+              required: [address]
+      responses:
+        '201':
+          description: The order has been created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Invalid input
+        '401':
+          description: An user must be logged in
+  /my-orders/{orderID}:
+    get:
+      description: See a particular order of the current user
+      parameters:
+        - $ref: '#/components/parameters/orderId'
+      responses:
+        '200':
+          description: The selected order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Invalid input
+        '401':
+          description: An user must be logged in
+        '404':
+          description: No order found with this ID
+
+    put:
+      description: Update a particular order of the current user
+      parameters:
+        - $ref: '#/components/parameters/orderId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                address:
+                  type: string
+                  description: new direction
+              required: [address]
+      responses:
+        '200':
+          description: The order has been updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Invalid input
+        '401':
+          description: An user must be logged in
+        '404':
+          description: No order found with this ID
+  /my-orders/{orderId}/tubs:
+    get:
+      description: Obtain the ice cream tubs from an order of the current user
+      parameters:
+        - $ref: '#/components/parameters/orderId'
+      responses:
+        '200':
+          description: Ice cream tubs from the order
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IceCreamTub'
+        '400':
+          description: Invalid input
+        '401':
+          description: An user must be logged in
+        '404':
+          description: No order found with this ID
+    post:
+      description: Adds a new ice cream tub to an order from the current user
+      parameters:
+        - $ref: '#/components/parameters/orderId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                weight:
+                  $ref: '#/components/schemas/TubWeight'
+                flavors:
+                  type: array
+                  items:
+                    type: string
+                  description: Ice cream flavors in this tub
+                  example: [ddl, mrc]
+              required: [weight, flavors]
+      responses:
+        '201':
+          description: The ice cream tub has been added to the order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IceCreamTub'
+        '400':
+          description: Invalid input
+        '401':
+          description: An user must be logged in
+        '404':
+          description: No order found with this ID
+  /my-orders/{orderID}/tubs/{tubID}:
+    delete:
+      description: Delete a tub from an order from this current user
+      parameters:
+        - $ref: '#/components/parameters/orderId'
+        - $ref: '#/components/parameters/tubId'
+      responses:
+        '204':
+          description: The ice cream tub has been deleted from the order
+        '400':
+          description: Invalid input
+        '401':
+          description: An user must be logged in
+        '404':
+          description: No order found with this ID
+  /my-orders/{orderID}/delivery-driver:
+    get:
+      description: Obtains the delivery driver assigned to an order from the current user
+      parameters:
+        - $ref: '#/components/parameters/orderId'
+      responses:
+        '200':
+          description: The delivery driver assigned to the order
+        '400':
+          description: Invalid input
+        '401':
+          description: An user must be logged in
+        '404':
+          description: No order found with this ID
+  /my-orders/{orderID}/pay:
+    post:
+      description: Starts the order payment
+      parameters:
+        - $ref: '#/components/parameters/orderId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentData'
+      responses:
+        '202':
+          description: Payment data received and will be processed
+        '400':
+          description: Invalid input
+        '401':
+          description: An user must be logged in
+        '404':
+          description: No order found with this ID
+
+  /orders:
+    get:
+      description: Obtains all orders from all users (only admins)
+      responses:
+        '200':
+          description: These are all the orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+        '403':
+          description: Unauthorized
+  /orders/{orderId}:
+    get:
+      description: Obtains all orders from all users (only admins)
+      responses:
+        '200':
+          description: These are all the orders
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '403':
+          description: Unauthorized
+        '404':
+          description: No order found with this ID
+  /orders/{orderId}/delivery-driver:
+    put:
+      description: Assign a delivery driver to an order (only admins)
+      parameters:
+        - $ref: '#/components/parameters/orderId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  description: delivery driver's identifier
+                  example: 1
+              required: [ id ]
+      responses:
+        '204':
+          description: Delivery driver assigned
+        '400':
+          description: Invalid input
+        '403':
+          description: Unauthorized
+        '404':
+          description: No order found with this id
+
+    delete:
+      description: Delete a delivery driver from an order (only admins)
+      parameters:
+        - $ref: '#/components/parameters/orderId'
+      responses:
+        '204':
+          description: Delivery driver deleted from the order
+        '400':
+          description: Invalid input
+        '403':
+          description: Unauthorized
+        '404':
+          description: No order found with this id
+
+  /delivery-drivers:
+    get:
+      description: Lists all delivery drivers (only admins)
+      responses:
+        '200':
+          description: These are all the delivery drivers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeliveryDriver'
+        '403':
+          description: Admin privileges required
+
+    post:
+      description: Create a new delivery driver from an existing user (only admins)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: integer
+                  description: the existing user identifier
+                name:
+                  type: string
+                  description: delivery driver's name
+                  example: John
+                last-name:
+                  type: string
+                  description: delivery driver's last name
+                  example: Doe
+                age:
+                  $ref: '#/components/schemas/DeliveryDriverAge'
+                cuil:
+                  type: string
+                  description: delivery driver's cuil
+                  example: 20-40506070-4
+                vehicles:
+                  type: array
+                  description: delivery driver's vehicles
+                  items:
+                    type: string
+                    example: ABC-123
+              required: [userId, name, last-name, age, cuil]
+      responses:
+        '201':
+          description: The user is now registered as a delivery driver
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryDriver'
+        '400':
+          description: Invalid input
+        '403':
+          description: Unauthorized
+        '404':
+          description: No user found with this ID
+  /delivery-drivers/{delivery-driverId}:
+    get:
+      description: Obtain a particular delivery driver (only admin)
+      parameters:
+        - $ref: '#/components/parameters/deliveryDriverId'
+      responses:
+        '200':
+          description: The selected delivery driver
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryDriver'
+        '400':
+          description: Invalid input
+        '403':
+          description: Unauthorized
+        '404':
+          description: No delivery driver found with this ID
+
+components:
+  parameters:
+    userId:
+      name: userId
+      in: path
+      description: id from an user
+      required: true
+      schema:
+        type: integer
+    flavorId:
+      name: flavorId
+      in: path
+      description: id from flavor
+      required: true
+      schema:
+        type: string
+    orderId:
+      name: orderId
+      in: path
+      description: id from order
+      required: true
+      schema:
+        type: integer
+    tubId:
+      name: tubId
+      in: path
+      description: id from ice cream tub
+      required: true
+      schema:
+        type: integer
+    deliveryDriverId:
+      name: deliveryDriverId
+      in: path
+      description: id from the delivery driver
+      required: true
+      schema:
+        type: integer
+
+  schemas:
+    UserEmail:
+      type: string
+      description: user email
+      example: user@example.com
+    UserPassword:
+      type: string
+      description: user password
+      example: password123
+    FlavorType:
+      description: flavors types
+      type: string
+      enum:
+        - chocolates
+        - dulce de leches
+        - cremas
+        - frutas
+      example: dulce de leches
+    Flavor:
+      description: an ice cream flavor
+      type: object
+      properties:
+        id:
+          type: string
+          description: short name to identify this flavor
+          example: ddl
+        name:
+          type: string
+          description: flavor name
+          example: Dulce de leche
+        type:
+          $ref: '#/components/schemas/FlavorType'
+      required: [id, name, type]
+    SignupRequest:
+      description: request to sign up a new user
+      type: object
+      properties:
+        email:
+          $ref: '#/components/schemas/UserEmail'
+        name:
+          type: string
+          description: user name
+          example: John
+        lastname:
+          type: string
+          description: user last name
+          example: Doe
+        password:
+          $ref: '#/components/schemas/UserPassword'
+      required: [email, name, lastname, password]
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          $ref: '#/components/schemas/UserEmail'
+        password:
+          $ref: '#/components/schemas/UserPassword'
+      required: [email, password]
+    UserPermission:
+      description: user permissions
+      type: string
+      enum:
+        - admin
+        - deliveryDriver
+      example: admin
+    User:
+      type: object
+      description: an user
+      properties:
+        id:
+          type: integer
+          description: identifier for this user
+          example: 4
+        email:
+          $ref: '#/components/schemas/UserEmail'
+        name:
+          type: string
+          description: name for this user
+          example: "John"
+        last_name:
+          type: string
+          description: last name for this user
+          example: "Doe"
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserPermission'
+          example: [admin]
+    Order:
+      description: an ice cream order
+      type: object
+      properties:
+        id:
+          type: integer
+          description: order identifier
+          example: 3
+        address:
+          type: string
+          description: address to which the order is to be delivered.
+          example: ExampleStreet 123, Example City
+        userID:
+          description: identifier for the user who made the order
+          type: integer
+          example: 1
+        deliveryDriverID:
+          description: identifier for the delivery driver assigned to the order
+          type: integer
+          example: 2
+        paymentState:
+          description: payment state of the order
+          type: string
+          enum:
+            - pending
+            - paid
+        totalCost:
+          description: total cost
+          type: integer
+          minimum: 1
+          example: 1200
+        iceCreamTubs:
+          description: ice cream tubs from the order
+          type: array
+          items:
+            $ref: '#/components/schemas/Flavor'
+
+      required: [id, address, userID, paymentState]
+    TubWeight:
+      description: ice cream tub weight measured in grams.
+      type: string
+      enum:
+        - "1000"
+        - "500"
+        - "250"
+      example: "500"
+    IceCreamTub:
+      description: an ice cream tub inside an order
+      type: object
+      properties:
+        id:
+          type: integer
+          description: tub identifier
+          example: 1
+        weight:
+          $ref: '#/components/schemas/TubWeight'
+        flavors:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: flavor identifier
+                example: ddl
+          description: ice cream flavors in this tub
+      required: [id, weight, flavors]
+    PaymentData:
+      description: necessary data to begin payment process
+      type: object
+      discriminator:
+        propertyName: paymentType
+      properties:
+        paymentType:
+          type: string
+          description: determines the type of payment
+      required: [paymentType]
+    PaymentDataDigitalWallet:
+      description: payment data for digital wallet
+      allOf:
+        - $ref: '#/components/schemas/PaymentData'
+        - type: object
+          properties:
+            alias:
+              type: string
+              description: username or alias of the wallet
+              example: my.wallet
+          required: [alias]
+    PaymentDataCreditCard:
+      description: payment data when using credit card
+      allOf:
+        - $ref: '#/components/schemas/PaymentData'
+        - type: object
+          properties:
+            creditCardNumber:
+              type: string
+              description: the 16 numbers of the credit card
+              example: "1234567812345678"
+            expirationMonth:
+              type: number
+              format: int8
+              minimum: 1
+              maximum: 12
+              description: expiration month
+              example: 4
+            expirationYear:
+              type: number
+              format: int8
+              minimum: 0
+              maximum: 99
+              description: expiration year
+              example: 24
+            cvv:
+              type: number
+              description: cvv
+              example: 123
+            cardHolderName:
+              type: string
+              description: credit card owner's name
+              example: John Doe
+          required: [creditCardNumber, expirationMonth, expirationYear, cvv ,cardHolderName]
+    DeliveryDriverAge:
+      description: delviery driver's age
+      type: integer
+      minimum: 18
+      maximum: 99
+      example: 22
+    DeliveryDriver:
+      description: a delivery driver
+      type: object
+      properties:
+        userID:
+          description: delivery driver user identifier
+          type: integer
+          example: 1
+        name:
+          description: delivery driver name
+          type: string
+          example: John
+        last-name:
+          description: delivery driver last name
+          type: string
+          example: Doe
+        cuil:
+          description: delivery driver cuil
+          type: string
+          example: 20-40506070-6
+        age:
+          $ref: '#/components/schemas/DeliveryDriverAge'
+        vehicles:
+          description: delivery driver vehicles
+          type: array
+          items:
+            type: string
+            example: ABC123
+      required: [name, last-name, cuil, age, vehicles]
+
